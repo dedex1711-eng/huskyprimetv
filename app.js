@@ -8,9 +8,10 @@ if (!SERVER) { location.href = 'index.html'; }
 const _PROXY_DEFAULT = 'https://super-hall-2081.alanadianabrito22.workers.dev';
 // Em Electron (file://) ou HTTP, não precisa de proxy — acesso direto
 const _IS_ELECTRON = location.protocol === 'file:' || navigator.userAgent.includes('Electron');
+const _IS_LOCALHOST = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const _PROXY_SAVED = localStorage.getItem('hp_proxy') || '';
-const _PROXY = _IS_ELECTRON
-  ? ''  // Electron: acesso direto sem proxy
+const _PROXY = _IS_ELECTRON || _IS_LOCALHOST
+  ? ''  // Electron ou localhost: acesso direto sem proxy
   : ((_PROXY_SAVED && !_PROXY_SAVED.includes('fancy-feather')) ? _PROXY_SAVED : _PROXY_DEFAULT);
 // Atualiza localStorage com o proxy correto
 localStorage.setItem('hp_proxy', _PROXY);

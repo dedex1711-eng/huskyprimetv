@@ -78,11 +78,17 @@
       'http://blackrubi.shop'
     ];
 
-    // Em Electron (file://) acesso direto; em HTTPS usa proxy
-    const needsProxy = location.protocol === 'https:' && !navigator.userAgent.includes('Electron');
+    // Detecta se está em Electron ou localhost
+    const isElectron = navigator.userAgent.includes('Electron');
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
+    
+    // Em Electron ou localhost, acesso direto (simula estar rodando local)
+    // Em HTTPS remoto, usa proxy
+    const needsProxy = location.protocol === 'https:' && !isElectron && !isLocalhost;
 
     function proxyFetch(url, opts = {}) {
       const fetchUrl = needsProxy ? `${PROXY_URL}?url=${encodeURIComponent(url)}` : url;
+      console.log(`[Fetch] ${needsProxy ? 'Via Proxy' : 'Direto'}: ${url}`);
       return fetch(fetchUrl, opts);
     }
 

@@ -15,8 +15,48 @@ const _PROXY = _IS_ELECTRON || _IS_LOCALHOST
   : ((_PROXY_SAVED && !_PROXY_SAVED.includes('fancy-feather')) ? _PROXY_SAVED : _PROXY_DEFAULT);
 // Atualiza localStorage com o proxy correto
 localStorage.setItem('hp_proxy', _PROXY);
+
 function proxyUrl(url) {
   return _PROXY ? `${_PROXY}?url=${encodeURIComponent(url)}` : url;
+}
+
+/**
+ * Tenta acessar URL localmente primeiro, depois com proxy se falhar
+ * Útil para streaming de canais/filmes/séries
+ */
+async function fetchWithLocalFallback(url, opts = {}) {
+  // Se não precisa proxy, tenta direto
+  if (!_PROXY) {
+    return fetch(url, opts);
+  }
+
+  // Tenta acesso local primeiro (sem proxy)
+  try {
+    console.log(`[Fetch] Tentando acesso local: ${url}`);
+    const response = await fetch(url, { ...opts, signal: AbortSignal.timeout(3000) });
+    if (response.ok) {
+      console.log(`[Fetch] Sucesso local: ${url}`);
+      return response;
+    }
+  } catch (e) {
+    console.log(`[Fetch] Acesso local falhou: ${e.message}`);
+  }
+
+  // Se falhou, tenta com proxy
+  try {
+    console.log(`[Fetch] Tentando com proxy: ${url}`);
+    const proxyedUrl = proxyUrl(url);
+    const response = await fetch(proxyedUrl, opts);
+    if (response.ok) {
+      console.log(`[Fetch] Sucesso com proxy: ${url}`);
+      return response;
+    }
+  } catch (e) {
+    console.log(`[Fetch] Acesso com proxy falhou: ${e.message}`);
+  }
+
+  // Se tudo falhar, retorna erro
+  throw new Error(`Falha ao acessar: ${url}`);
 }
 
 const api = (action, extra = '') =>

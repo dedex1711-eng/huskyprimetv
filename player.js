@@ -29,14 +29,28 @@ video.addEventListener('volumechange', () => localStorage.setItem('hp_vol', vide
 // Quando rodando via localhost, usa o proxy local para streams http://
 // Isso evita bloqueio de mixed content no Android WebView
 const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const _isElectron = navigator.userAgent.includes('Electron');
+const _isFile = location.protocol === 'file:';
 
 function resolveStreamUrl(url) {
   if (!url) return url;
-  // HLS (.m3u8) e canais ao vivo: acesso direto (funciona no Android)
-  // MP4/TS (filmes/séries): proxy via servidor local para evitar bloqueio
-  if (_isLocalhost && !url.includes('.m3u8') && !url.includes('/live/')) {
-    return `http://localhost:8080/proxy?url=${encodeURIComponent(url)}`;
+  
+  // HLS (.m3u8) e canais ao vivo: acesso direto (funciona em qualquer lugar)
+  if (url.includes('.m3u8') || url.includes('/live/')) {
+    return url;
   }
+  
+  // MP4/TS (filmes/séries): tenta acesso local primeiro
+  // Se estiver em HTTPS remoto, usa proxy
+  const needsProxy = location.protocol === 'https:' && !_isElectron && !_isLocalhost && !_isFile;
+  
+  if (needsProxy) {
+    // Em HTTPS remoto, usa proxy Cloudflare
+    const proxyUrl = 'https://super-hall-2081.alanadianabrito22.workers.dev';
+    return `${proxyUrl}?url=${encodeURIComponent(url)}`;
+  }
+  
+  // Em localhost, Electron ou file://, tenta acesso direto
   return url;
 }
 

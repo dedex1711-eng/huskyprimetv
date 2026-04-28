@@ -41,6 +41,7 @@
       <p id="loginError" class="login-error hidden"></p>
     </form>
   </div>
+  <script src="api/licenseauth.js"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     if (localStorage.getItem('hp_server')) location.href = 'app.html';
@@ -63,7 +64,8 @@
     // Instruções: https://workers.cloudflare.com → Create Worker → cole cloudflare-worker.js → Deploy
     const PROXY_URL = 'https://super-hall-2081.alanadianabrito22.workers.dev';
 
-    const SERVERS = [
+    // Servidores fallback (usados se LicenseAuth falhar)
+    const FALLBACK_SERVERS = [
       'http://fonteblack.sbs',
       'http://zeroum.blog:80',
       'http://pbkdiamond.site:80',
@@ -84,6 +86,29 @@
       return fetch(fetchUrl, opts);
     }
 
+    /**
+     * Busca servidores do LicenseAuth
+     */
+    async function fetchServersFromLicenseAuth() {
+      try {
+        const licenseAuth = new LicenseAuthApp(
+          "huskyplayweb",           // appName
+          "Ob03SfvdAh",             // ownerId
+          "husky_xtream_dnsweb",    // varId (ou secret)
+          "1.0"                     // version
+        );
+
+        const result = await licenseAuth.init();
+        if (result.success && result.servers.length > 0) {
+          console.log("[Login] Servidores obtidos do LicenseAuth:", result.servers);
+          return result.servers;
+        }
+      } catch (error) {
+        console.error("[Login] Erro ao buscar servidores do LicenseAuth:", error.message);
+      }
+      return [];
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
       const user = document.getElementById('username').value.trim();
@@ -96,7 +121,17 @@
 
       // Se informou servidor manual, tenta só ele
       const manualServer = document.getElementById('serverManual').value.trim().replace(/\/$/, '');
-      const serversToTry = manualServer ? [manualServer] : SERVERS;
+      
+      let serversToTry = [];
+      if (manualServer) {
+        serversToTry = [manualServer];
+      } else {
+        // Tenta buscar servidores do LicenseAuth
+        btn.textContent = 'Buscando servidores...';
+        const licenseServers = await fetchServersFromLicenseAuth();
+        serversToTry = licenseServers.length > 0 ? licenseServers : FALLBACK_SERVERS;
+        console.log(`[Login] Usando ${serversToTry.length} servidores (license=${licenseServers.length})`);
+      }
 
       for (let i = 0; i < serversToTry.length; i++) {
         const server = serversToTry[i];

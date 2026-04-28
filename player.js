@@ -25,19 +25,37 @@ const savedVol = parseFloat(localStorage.getItem('hp_vol') ?? '1');
 video.volume = savedVol;
 video.addEventListener('volumechange', () => localStorage.setItem('hp_vol', video.volume));
 
+// ── Proxy local (Android) ─────────────────────────────────────────────────────
+// Quando rodando via localhost, usa o proxy local para streams http://
+// Isso evita bloqueio de mixed content no Android WebView
+const _isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+function resolveStreamUrl(url) {
+  if (!url) return url;
+  // HLS (.m3u8) e canais ao vivo: acesso direto (funciona no Android)
+  // MP4/TS (filmes/séries): proxy via servidor local para evitar bloqueio
+  if (_isLocalhost && !url.includes('.m3u8') && !url.includes('/live/')) {
+    return `http://localhost:8080/proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 // ── Load stream ───────────────────────────────────────────────────────────────
 function loadStream(url) {
   if (!url) return;
   const isHls = url.includes('.m3u8') || url.includes('/live/');
+  const finalUrl = resolveStreamUrl(url);
 
-  if (isHls && Hls.isSupported()) {
+  if (isHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
     const hls = new Hls({ enableWorker: true, lowLatencyMode: true, maxBufferLength: 30 });
-    hls.loadSource(url);
+    hls.loadSource(finalUrl);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
-    hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) { video.src = url; video.play().catch(() => {}); } });
+    hls.on(Hls.Events.ERROR, (_, d) => {
+      if (d.fatal) { video.src = finalUrl; video.play().catch(() => {}); }
+    });
   } else {
-    video.src = url;
+    video.src = finalUrl;
     video.play().catch(() => {});
   }
 }
@@ -67,7 +85,6 @@ function restoreProgress() {
 }
 
 video.addEventListener('loadedmetadata', restoreProgress, { once: true });
-// Fallback for HLS which may fire canplay before loadedmetadata
 video.addEventListener('canplay', restoreProgress, { once: true });
 
 // ── Save watch progress ───────────────────────────────────────────────────────
@@ -75,7 +92,7 @@ let _lastSave = 0;
 video.addEventListener('timeupdate', () => {
   if (!itemId || !itemType || !video.duration || video.duration < 60) return;
   const now = Date.now();
-  if (now - _lastSave < 5000) return; // save every 5s max
+  if (now - _lastSave < 5000) return;
   _lastSave = now;
   const pct = (video.currentTime / video.duration) * 100;
   const stored = JSON.parse(localStorage.getItem(progressKey()) || '{}');

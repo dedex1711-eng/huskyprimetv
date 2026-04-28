@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LicenseAuth Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .container {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    h1 {
+      color: #FFB703;
+    }
+    button {
+      background: #FFB703;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #FFC107;
+    }
+    .result {
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+      border-left: 4px solid #FFB703;
+    }
+    .success {
+      color: #4CAF50;
+    }
+    .error {
+      color: #f44336;
+    }
+    .info {
+      color: #2196F3;
+    }
+    pre {
+      background: #0a0a0a;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .server-list {
+      list-style: none;
+      padding: 0;
+    }
+    .server-list li {
+      background: #1a1a1a;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+      border-left: 3px solid #00D4FF;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 LicenseAuth Test</h1>
+    
+    <button onclick="testLicenseAuth()">Testar LicenseAuth</button>
+    <button onclick="clearResults()">Limpar Resultados</button>
+    
+    <div id="results"></div>
+  </div>
+
+  <script src="licenseauth.js"></script>
+  <script>
+    function log(message, type = 'info') {
+      const resultsDiv = document.getElementById('results');
+      const timestamp = new Date().toLocaleTimeString();
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+      
+      const logEntry = document.createElement('div');
+      logEntry.className = `result ${className}`;
+      logEntry.innerHTML = `<strong>[${timestamp}] ${icon}</strong> ${message}`;
+      resultsDiv.appendChild(logEntry);
+      
+      // Auto-scroll para o final
+      logEntry.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearResults() {
+      document.getElementById('results').innerHTML = '';
+    }
+
+    async function testLicenseAuth() {
+      clearResults();
+      log('Iniciando teste do LicenseAuth...', 'info');
+
+      try {
+        // Criar instância
+        log('Criando instância de LicenseAuthApp...', 'info');
+        const licenseAuth = new LicenseAuthApp(
+          "huskyplayweb",
+          "Ob03SfvdAh",
+          "husky_xtream_dnsweb",
+          "1.0"
+        );
+        log('Instância criada com sucesso', 'success');
+
+        // Inicializar
+        log('Inicializando conexão com LicenseAuth...', 'info');
+        const result = await licenseAuth.init();
+
+        if (result.success) {
+          log(`✓ Conexão estabelecida com sucesso!`, 'success');
+          log(`Mensagem: ${result.message}`, 'success');
+
+          const servers = licenseAuth.getServers();
+          log(`Total de servidores encontrados: ${servers.length}`, 'success');
+
+          if (servers.length > 0) {
+            log('Servidores DNS:', 'info');
+            const serverList = document.createElement('ul');
+            serverList.className = 'server-list';
+            servers.forEach((server, index) => {
+              const li = document.createElement('li');
+              li.textContent = `${index + 1}. ${server}`;
+              serverList.appendChild(li);
+            });
+            document.getElementById('results').appendChild(serverList);
+
+            // Testar primeiro servidor
+            log(`Testando conectividade do primeiro servidor: ${servers[0]}`, 'info');
+            try {
+              const testUrl = `${servers[0]}/player_api.php?username=test&password=test`;
+              const response = await fetch(testUrl, { signal: AbortSignal.timeout(5000) });
+              if (response.ok) {
+                log(`✓ Servidor respondeu com sucesso (HTTP ${response.status})`, 'success');
+              } else {
+                log(`⚠ Servidor respondeu com HTTP ${response.status}`, 'info');
+              }
+            } catch (error) {
+              log(`⚠ Erro ao conectar no servidor: ${error.message}`, 'error');
+            }
+          }
+        } else {
+          log(`✗ Falha ao conectar: ${result.message}`, 'error');
+        }
+      } catch (error) {
+        log(`✗ Erro durante o teste: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+
+    // Auto-test ao carregar
+    window.addEventListener('load', () => {
+      log('Página carregada. Clique em "Testar LicenseAuth" para iniciar.', 'info');
+    });
+  </script>
+</body>
+</html>

@@ -4,10 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Player — HuskyPlay</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+  <script src="hls.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #000; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; height: 48px;
       background: rgba(0,0,0,.75); display: flex; align-items: center;
@@ -27,10 +28,44 @@
       display: flex; align-items: center; justify-content: center;
     }
     .logo .play-icon svg { fill: #000; width: 9px; height: 9px; margin-left: 2px; }
-    video {
+
+    /* Wrapper do player */
+    .player-wrap {
       position: fixed; top: 48px; left: 0; right: 0; bottom: 0;
-      width: 100%; height: calc(100% - 48px);
       background: #000;
+    }
+
+    video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      /* Remove o poster/thumbnail padrão do Android WebView */
+      object-fit: contain;
+    }
+
+    /* Esconde o ícone de play gigante que o Android injeta */
+    video::-webkit-media-controls-overlay-play-button { display: none !important; }
+    video::-webkit-media-controls-play-button { display: none !important; }
+
+    /* Spinner de carregamento branco */
+    .spinner-wrap {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .spinner-wrap.hidden { display: none; }
+
+    .spinner {
+      width: 52px; height: 52px;
+      border: 4px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -45,7 +80,29 @@
     </div>
   </div>
 
-  <video id="video" controls autoplay playsinline></video>
+  <div class="player-wrap">
+    <video id="video" controls autoplay playsinline poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+    <div class="spinner-wrap" id="spinnerWrap">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <script>
+    // Controla o spinner: mostra enquanto carrega, esconde quando começa a tocar
+    const spinner = document.getElementById('spinnerWrap');
+    const video   = document.getElementById('video');
+
+    function showSpinner() { spinner.classList.remove('hidden'); }
+    function hideSpinner() { spinner.classList.add('hidden'); }
+
+    video.addEventListener('waiting',  showSpinner);
+    video.addEventListener('stalled',  showSpinner);
+    video.addEventListener('seeking',  showSpinner);
+    video.addEventListener('loadstart', showSpinner);
+    video.addEventListener('playing',  hideSpinner);
+    video.addEventListener('canplay',  hideSpinner);
+    video.addEventListener('error',    hideSpinner);
+  </script>
 
   <script src="player.js"></script>
 </body>

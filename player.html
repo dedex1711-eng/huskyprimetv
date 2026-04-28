@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Player — HuskyPlay</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #000; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 48px;
+      background: rgba(0,0,0,.75); display: flex; align-items: center;
+      padding: 0 16px; gap: 12px; z-index: 10;
+      backdrop-filter: blur(6px);
+    }
+    .back-btn {
+      background: rgba(255,255,255,.1); border: none; color: #fff;
+      padding: 6px 14px; border-radius: 6px; font-size: .9rem; cursor: pointer;
+    }
+    .back-btn:hover { background: rgba(255,255,255,.2); }
+    .logo { display: flex; align-items: center; gap: 3px; }
+    .logo .husky { font-size: 1.3rem; font-weight: 700; color: #00D4FF; }
+    .logo .play-text { font-size: 1.3rem; font-weight: 700; color: #FFB703; }
+    .logo .play-icon {
+      width: 20px; height: 20px; background: #FFB703; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo .play-icon svg { fill: #000; width: 9px; height: 9px; margin-left: 2px; }
+    video {
+      position: fixed; top: 48px; left: 0; right: 0; bottom: 0;
+      width: 100%; height: calc(100% - 48px);
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="back-btn" id="backBtn">← Voltar</button>
+    <div class="logo">
+      <span class="husky">Husky</span>
+      <span class="play-text">Play</span>
+      <div class="play-icon"><svg viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg></div>
+    </div>
+  </div>
+
+  <video id="video" controls autoplay playsinline></video>
+
+  <script src="player.js"></script>
+</body>
+</html>

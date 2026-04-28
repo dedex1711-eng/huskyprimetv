@@ -1,0 +1,14 @@
+{
+  "name": "HuskyPlay",
+  "short_name": "HuskyPlay",
+  "description": "IPTV Player Web App",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#FFB703",
+  "orientation": "any",
+  "icons": [
+    { "src": "icon.png.ico", "sizes": "192x192", "type": "image/x-icon", "purpose": "any maskable" },
+    { "src": "icon.png.ico", "sizes": "512x512", "type": "image/x-icon", "purpose": "any maskable" }
+  ]
+}

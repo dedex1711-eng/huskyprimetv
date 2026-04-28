@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HuskyPlay</title>
+  <link rel="icon" type="image/x-icon" href="icon.png.ico"/>
+  <link rel="apple-touch-icon" href="icon.png.ico"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="style.css"/>
+  <meta name="theme-color" content="#FFB703"/>
+</head>
+<body class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="husky">Husky</span>
+      <span class="play-text">Play</span>
+      <div class="play-icon">
+        <svg viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg>
+      </div>
+    </div>
+    <h2>Faça login para continuar</h2>
+    <form id="loginForm">
+      <div class="field">
+        <label>Usuário</label>
+        <input type="text" id="username" placeholder="seu_usuario" required autocomplete="username"/>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="password" placeholder="sua_senha" required autocomplete="current-password"/>
+      </div>
+      <div class="field" id="serverField" style="display:none;">
+        <label>Servidor (opcional)</label>
+        <input type="text" id="serverManual" placeholder="http://servidor.com:porta" autocomplete="off"/>
+        <div style="font-size:.75rem;color:#888;margin-top:4px;">Ex: http://fonteblack.sbs</div>
+      </div>
+      <div style="text-align:right;margin-bottom:12px;">
+        <button type="button" id="toggleServer" style="background:none;border:none;color:#888;font-size:.8rem;cursor:pointer;text-decoration:underline;">+ Informar servidor manualmente</button>
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">Entrar</button>
+      <p id="loginError" class="login-error hidden"></p>
+    </form>
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    if (localStorage.getItem('hp_server')) location.href = 'app.html';
+
+    const _savedUser = localStorage.getItem('hp_user');
+    const _savedPass = localStorage.getItem('hp_pass');
+    if (_savedUser) document.getElementById('username').value = _savedUser;
+    if (_savedPass) document.getElementById('password').value = _savedPass;
+
+    // Toggle servidor manual
+    document.getElementById('toggleServer').addEventListener('click', () => {
+      const field = document.getElementById('serverField');
+      const btn = document.getElementById('toggleServer');
+      const visible = field.style.display !== 'none';
+      field.style.display = visible ? 'none' : '';
+      btn.textContent = visible ? '+ Informar servidor manualmente' : '− Ocultar servidor';
+    });
+
+    // Cloudflare Worker proxy URL — substitua pela sua URL após o deploy
+    // Instruções: https://workers.cloudflare.com → Create Worker → cole cloudflare-worker.js → Deploy
+    const PROXY_URL = 'https://super-hall-2081.alanadianabrito22.workers.dev';
+
+    const SERVERS = [
+      'http://fonteblack.sbs',
+      'http://zeroum.blog:80',
+      'http://pbkdiamond.site:80',
+      'http://blackcyber.site',
+      'http://gowpm.sbs',
+      'http://cdn.vr766.com:80',
+      'http://pbklite.site:80',
+      'http://zilgringo.site:80',
+      'http://blackouro.fun',
+      'http://blackrubi.shop'
+    ];
+
+    // Em Electron (file://) acesso direto; em HTTPS usa proxy
+    const needsProxy = location.protocol === 'https:' && !navigator.userAgent.includes('Electron');
+
+    function proxyFetch(url, opts = {}) {
+      const fetchUrl = needsProxy ? `${PROXY_URL}?url=${encodeURIComponent(url)}` : url;
+      return fetch(fetchUrl, opts);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value;
+      const btn  = document.getElementById('loginBtn');
+      const err  = document.getElementById('loginError');
+
+      btn.disabled = true;
+      err.classList.add('hidden');
+
+      // Se informou servidor manual, tenta só ele
+      const manualServer = document.getElementById('serverManual').value.trim().replace(/\/$/, '');
+      const serversToTry = manualServer ? [manualServer] : SERVERS;
+
+      for (let i = 0; i < serversToTry.length; i++) {
+        const server = serversToTry[i];
+        btn.textContent = `Conectando... (${i + 1}/${serversToTry.length})`;
+        try {
+          const apiUrl = `${server}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+          const res = await proxyFetch(apiUrl, { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data.user_info && data.user_info.auth == 1) {
+            // Salva o server com proxy embutido se necessário
+            localStorage.setItem('hp_server', server);
+            localStorage.setItem('hp_user', user);
+            localStorage.setItem('hp_pass', pass);
+            localStorage.setItem('hp_proxy', needsProxy ? PROXY_URL : '');
+            if (data.user_info.exp_date) localStorage.setItem('hp_expiry', data.user_info.exp_date);
+            location.href = 'app.html';
+            return;
+          }
+        } catch {}
+      }
+
+      err.textContent = 'Usuário ou senha inválidos. Verifique suas credenciais.';
+      err.classList.remove('hidden');
+      btn.textContent = 'Entrar';
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

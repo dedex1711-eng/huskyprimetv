@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HuskyPlay</title>
+  <link rel="icon" type="image/x-icon" href="icon.png.ico"/>
+  <link rel="apple-touch-icon" href="icon.png.ico"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="stylesheet" href="style.css"/>
+  <meta name="theme-color" content="#FFB703"/>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="topbar-btn mobile-menu-btn" id="menuToggle">☰</button>
+    <div class="topbar-logo">
+      <span class="husky">Husky</span>
+      <span class="play-text">Play</span>
+      <div class="play-icon"><svg viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-profile-btn" id="profileBtn" title="Perfil">
+        <div class="nav-avatar" style="width:30px;height:30px;font-size:1rem;">👤</div>
+        <span class="topbar-profile-name" id="profileName">Principal</span>
+      </button>
+      <button class="logout-btn" id="logoutBtn" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <!-- Nav sidebar -->
+    <nav class="nav-sidebar" id="navSidebar">
+      <div class="nav-section">
+        <button class="nav-btn home" data-page="home">🏠 Início</button>
+        <button class="nav-btn recents" data-page="recents">🕒 Recentes</button>
+        <button class="nav-btn favorites" data-page="favorites">❤ Favoritos</button>
+        <button class="nav-btn live" data-page="live">📺 Canais</button>
+        <button class="nav-btn movies" data-page="movies">🎬 Filmes</button>
+        <button class="nav-btn series" data-page="series">📂 Séries</button>
+        <button class="nav-btn radio" data-page="radio">📻 Rádios</button>
+        <button class="nav-btn games" data-page="games">⚽ Jogos</button>
+      </div>
+
+      <div class="nav-separator"></div>
+
+      <div class="nav-expiry">
+        <div class="nav-expiry-label">⏱ TEMPO DE EXPIRAÇÃO</div>
+        <div class="nav-expiry-value" id="expiryText">Carregando...</div>
+      </div>
+
+      <div class="nav-separator"></div>
+
+
+    </nav>
+
+    <!-- Content area -->
+    <div class="content-area">
+
+      <!-- Category sidebar -->
+      <aside class="cat-sidebar" id="catSidebar">
+        <div class="cat-sidebar-title" id="catSidebarTitle">📺 Canais ao Vivo</div>
+        <div class="cat-list" id="catList"></div>
+      </aside>
+
+      <!-- Main panel -->
+      <div class="main-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="panelTitle">📺 Todos os Canais</div>
+          <div class="panel-search">
+            <span>🔍</span>
+            <input type="text" id="panelSearch" placeholder="Buscar canais..."/>
+            <button class="clear-btn hidden" id="clearSearch">✕</button>
+          </div>
+        </div>
+
+        <div class="grid-scroll" id="gridScroll">
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Splash Screen -->
+<div id="splashScreen" class="splash-screen">
+  <div class="splash-logo">
+    <span class="husky">Husky</span>
+    <span class="play-text">Play</span>
+    <div class="play-icon"><svg viewBox="0 0 10 12"><polygon points="0,0 10,6 0,12"/></svg></div>
+  </div>
+  <div class="splash-subtitle">Preparando seu conteúdo...</div>
+  <div class="splash-items" id="splashItems">
+    <div class="splash-item" id="si-live"><span class="si-icon">⏳</span><span class="si-label">Sincronizando canais</span></div>
+    <div class="splash-item" id="si-movies"><span class="si-icon">⏳</span><span class="si-label">Sincronizando filmes</span></div>
+    <div class="splash-item" id="si-series"><span class="si-icon">⏳</span><span class="si-label">Sincronizando séries</span></div>
+    <div class="splash-item" id="si-radio"><span class="si-icon">⏳</span><span class="si-label">Sincronizando rádio</span></div>
+  </div>
+  <div class="splash-bar-wrap"><div class="splash-bar" id="splashBar"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
